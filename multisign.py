@@ -1,9 +1,3 @@
-from reportlab.pdfgen import canvas
-from PyPDF2 import PdfFileWriter, PdfFileReader
-from PIL import Image
-import argparse
-from pdf2image import convert_from_path
-import cv2
 import os
 import glob
 
