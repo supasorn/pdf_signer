@@ -18,7 +18,7 @@ sig_small = None
 pagei = 0
 
 pos = []
-dwidth = 1000
+dwidth = 800
 signature_width = 0.16
 
 def signPdf():
@@ -49,7 +49,7 @@ def signPdf():
 
     output_file.addPage(input_page)
 
-  with open(args.pdf.replace(".pdf", "_signed.pdf"), "wb") as outputStream:
+  with open(os.path.dirname(args.pdf) + "/signed_" + os.path.basename(args.pdf), "wb") as outputStream:
     output_file.write(outputStream)
 
   i = 0
@@ -114,6 +114,7 @@ def sign():
   print(sig.shape)
   sig_small = cv2.resize(sig, (swidth, int(swidth * sig.shape[0] / sig.shape[1])))
 
+  cv2.namedWindow("pp", cv2.WINDOW_AUTOSIZE)
   setNewPage()
   cv2.setMouseCallback("pp", click_and_crop)
   while True:
