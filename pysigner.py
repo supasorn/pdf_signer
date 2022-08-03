@@ -71,6 +71,13 @@ def nextPage(x, y):
   else:
     signPdf()
 
+def showImg(m):
+  cv2.imshow("pp", m)
+  h = 1200
+  print(int(m.shape[1]*m.shape[0] / h), h)
+  print(m.shape)
+  cv2.resizeWindow("pp", int(m.shape[1] / m.shape[0] * h), h)
+
 def click_and_crop(event, x, y, flags, param):
   global sm, sig, sig_small, pagei
   tsm = sm.copy()
@@ -84,7 +91,8 @@ def click_and_crop(event, x, y, flags, param):
   alpha = sig_small[:, :, 3:] / 255.0
   tsm[y:y+rows, x:x+cols ] = sig_small[:, :, :3] * alpha + tsm[y:y+rows, x:x+cols] * (1-alpha)
   # tsm[y:y+rows, x:x+cols ] = sig_small[:, :, :3]
-  cv2.imshow("pp", tsm)
+  showImg(tsm)
+
   if event == cv2.EVENT_LBUTTONUP:
     nextPage(x, y)
 
@@ -102,7 +110,7 @@ def setNewPage():
   global pagei, sm
   img = cv2.imread(getNumberedName(args.pdf, pagei))
   sm = cv2.resize(img, (dwidth, int(dwidth * img.shape[0] / img.shape[1])))
-  cv2.imshow("pp", sm)
+  showImg(sm)
 
 def sign():
   global sm, sig, sig_small, dwidth
@@ -114,7 +122,7 @@ def sign():
   print(sig.shape)
   sig_small = cv2.resize(sig, (swidth, int(swidth * sig.shape[0] / sig.shape[1])))
 
-  cv2.namedWindow("pp", cv2.WINDOW_AUTOSIZE)
+  cv2.namedWindow("pp", cv2.WINDOW_NORMAL)
   setNewPage()
   cv2.setMouseCallback("pp", click_and_crop)
   while True:
