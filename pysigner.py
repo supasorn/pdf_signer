@@ -1,5 +1,5 @@
 from reportlab.pdfgen import canvas
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from PyPDF2 import PdfWriter, PdfReader
 from PIL import Image
 import argparse
 from pdf2image import convert_from_path
@@ -23,16 +23,16 @@ signature_width = 0.16
 
 def signPdf():
   print(pos)
-  input_file = PdfFileReader(open(args.pdf, "rb"))
-  _, _, w, h = input_file.getPage(0).mediaBox
+  input_file = PdfReader(open(args.pdf, "rb"))
+  _, _, w, h = input_file.pages[0].mediabox
 
   signature_img = "signature.png"
   sig = Image.open(signature_img)
 
-  output_file = PdfFileWriter()
-  pages = input_file.getNumPages()
+  output_file = PdfWriter()
+  pages = len(input_file.pages)
   for i in range(pages):
-    input_page = input_file.getPage(i)
+    input_page = input_file.pages[i]
 
     if pos[i][0] != -1:
       c = canvas.Canvas('watermark.pdf')
@@ -44,10 +44,10 @@ def signPdf():
       c.drawImage("signature.png", x * float(w), y * float(h), sw, sw * sig.size[1] / sig.size[0], mask='auto')
       c.save()
 
-      watermark = PdfFileReader(open("watermark.pdf", "rb"))
-      input_page.mergePage(watermark.getPage(0))
+      watermark = PdfReader(open("watermark.pdf", "rb"))
+      input_page.merge_page(watermark.pages[0])
 
-    output_file.addPage(input_page)
+    output_file.add_page(input_page)
 
   with open(os.path.dirname(args.pdf) + "/signed_" + os.path.basename(args.pdf), "wb") as outputStream:
     output_file.write(outputStream)
@@ -85,7 +85,7 @@ def click_and_crop(event, x, y, flags, param):
 
   rows,cols,channels = sig_small.shape
 
-  print(sig_small.shape)
+  print("sig_small.shape", sig_small.shape)
   # overlay = cv2.addWeighted(background[250:250+rows, 0:0+cols],0.5,overlay,0.5,0)
 
   alpha = sig_small[:, :, 3:] / 255.0

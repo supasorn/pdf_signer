@@ -6,7 +6,6 @@ import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-folder', type=str, default="pdf")
-
 args = parser.parse_args()
 
 def multisign():
@@ -20,7 +19,7 @@ def multisign():
 def multisign_downloadfolder():
   for f in glob.glob("/Users/supasorn/Downloads/*.pdf"):
     diff = time.time() - os.path.getctime(f)
-    if diff > 60 * 20: continue
+    if diff > 60 * 20 * 10: continue
 
     nf = os.path.dirname(f) + "/signed_" + os.path.basename(f)
     if os.path.exists(nf) or "signed_" in f:
@@ -28,6 +27,7 @@ def multisign_downloadfolder():
 
     os.system('python pysigner.py -pdf "' + f + '"')
     print(f)
+
 
 if __name__ == "__main__":
   # multisign()
