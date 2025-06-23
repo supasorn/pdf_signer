@@ -20,6 +20,7 @@ pagei = 0
 pos = []
 dwidth = 800
 signature_width = 0.16
+# signature_width = 0.1
 
 def signPdf():
   print(pos)
@@ -128,6 +129,8 @@ def sign():
   while True:
     k = cv2.waitKey(0)
     if k == 27:
+      # remove all png files
+      os.system("rm " + args.pdf.replace(".pdf", "_*.jpg"))
       exit()
     elif k == 32:
       nextPage(-1, -1)

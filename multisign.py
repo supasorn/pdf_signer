@@ -24,6 +24,12 @@ def multisign_downloadfolder():
     nf = os.path.dirname(f) + "/signed_" + os.path.basename(f)
     if os.path.exists(nf) or "signed_" in f:
       continue
+    # ask for confirmation
+    print("Signing file: " + f)
+    confirm = input("Do you want to sign this file? (y/n): ")
+    if confirm.lower() != 'y':
+      print("Skipping file: " + f)
+      continue
 
     os.system('python pysigner.py -pdf "' + f + '"')
     print(f)
