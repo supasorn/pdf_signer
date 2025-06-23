@@ -8,14 +8,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-pdf', type=str, default="pdf/memo.pdf")
 parser.add_argument('-x', type=float, default=0.58101388)
 parser.add_argument('-y', type=float, default=0.37852583)
+parser.add_argument('--signature', type=str, default="signature.png", help="Path to signature image file")
 
 args = parser.parse_args()
 
 def sign():
-  input_file = PdfFileReader(open(args.pdf, "rb"))
-  _, _, w, h = input_file.getPage(0).mediaBox
 
-  signature_img = "signature.png"
+  input_file = PdfFileReader(open(args.pdf, "rb"))
+  c.drawImage(signature_img, args.x * float(w), args.y * float(h), sw, sw * sig.size[1] / sig.size[0], mask='auto')
+
+  signature_img = args.signature
   sig = Image.open(signature_img)
 
   signature_width = 0.16
