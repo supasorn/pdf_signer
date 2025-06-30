@@ -17,9 +17,9 @@ sig = None
 sig_small = None
 pagei = 0
 
-pos = []
+pos = []  # becomes: list of lists, each sublist is [[x1, y1], [x2, y2], ...] for that page
 dwidth = 800
-signature_width = 0.16
+signature_width = 0.17
 # signature_width = 0.1
 
 preview_sizes = []
@@ -27,11 +27,6 @@ preview_sizes = []
 def signPdf():
   print(pos)
   input_file = PdfReader(open(args.pdf, "rb"))
-  # for i in range(len(input_file.pages)):
-    # print("Page %d:" % i)
-    # print(input_file.pages[i].mediabox)
-  # exit()
-
   signature_img = "signature.png"
   sig = Image.open(signature_img)
 
@@ -41,20 +36,19 @@ def signPdf():
     input_page = input_file.pages[i]
     _, _, w, h = input_file.pages[i].mediabox
 
-    if pos[i][0] != -1:
+    # Draw all signatures for this page
+    if i < len(pos) and len(pos[i]) > 0 and pos[i][0][0] != -1:
       c = canvas.Canvas('watermark.pdf')
       c.setPageSize((w, h))
       sw = float(w) * signature_width
-
       preview_h, preview_w = preview_sizes[i]
-      x_frac = pos[i][0] / preview_w
-      y_frac = (pos[i][1] + sig_small.shape[0]) / preview_h
-      x = x_frac * float(w)
-      y = float(h) - y_frac * float(h)
-
-      c.drawImage("signature.png", x, y, sw, sw * sig.size[1] / sig.size[0], mask='auto')
+      for sig_pos in pos[i]:
+        x_frac = sig_pos[0] / preview_w
+        y_frac = (sig_pos[1] + sig_small.shape[0]) / preview_h
+        x = x_frac * float(w)
+        y = float(h) - y_frac * float(h)
+        c.drawImage("signature.png", x, y, sw, sw * sig.size[1] / sig.size[0], mask='auto')
       c.save()
-
       watermark = PdfReader(open("watermark.pdf", "rb"))
       input_page.merge_page(watermark.pages[0])
 
@@ -75,7 +69,11 @@ def signPdf():
 
 def nextPage(x, y):
   global pagei
-  pos.append([x, y])
+  # Only append a new page's signature list if advancing to a new page
+  if len(pos) <= pagei:
+    pos.append([])
+  if x != -1 and y != -1:
+    pos[pagei].append([x, y])
   if os.path.exists(getNumberedName(args.pdf, pagei+1)):
     pagei += 1
     setNewPage()
@@ -92,21 +90,23 @@ def showImg(m):
 def click_and_crop(event, x, y, flags, param):
   global sm, sig, sig_small, pagei
   tsm = sm.copy()
-  tsm[y, x] = 0
-
   rows,cols,channels = sig_small.shape
-
-  print("sig_small.shape", sig_small.shape)
-  # overlay = cv2.addWeighted(background[250:250+rows, 0:0+cols],0.5,overlay,0.5,0)
-
   alpha = sig_small[:, :, 3:] / 255.0
   tsm[y:y+rows, x:x+cols ] = sig_small[:, :, :3] * alpha + tsm[y:y+rows, x:x+cols] * (1-alpha)
-  # tsm[y:y+rows, x:x+cols ] = sig_small[:, :, :3]
   showImg(tsm)
 
   if event == cv2.EVENT_LBUTTONUP:
-    nextPage(x, y)
-
+    # Check if shift is held
+    if flags & cv2.EVENT_FLAG_SHIFTKEY:
+      # Add signature to current page, do not advance
+      if len(pos) <= pagei:
+        pos.append([])
+      pos[pagei].append([x, y])
+      sm = tsm.copy()
+      # Optionally, show the updated image again (already done above)
+    else:
+      # Add signature and advance page
+      nextPage(x, y)
 
 def pdf2jpg(f):
   images = convert_from_path(f, dpi=200)
