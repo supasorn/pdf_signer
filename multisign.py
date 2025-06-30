@@ -3,6 +3,7 @@ import glob
 import argparse
 import time
 import datetime
+from PyPDF2 import PdfReader
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-folder', type=str, default="pdf")
@@ -24,12 +25,21 @@ def multisign_downloadfolder():
     nf = os.path.dirname(f) + "/signed_" + os.path.basename(f)
     if os.path.exists(nf) or "signed_" in f:
       continue
-    # ask for confirmation
-    print("Signing file: " + f)
-    confirm = input("Do you want to sign this file? (y/n): ")
-    if confirm.lower() != 'y':
-      print("Skipping file: " + f)
+    # count number of pages
+    try:
+      with open(f, "rb") as pdf_file:
+        reader = PdfReader(pdf_file)
+        num_pages = len(reader.pages)
+    except Exception as e:
+      print(f"Could not read {f}: {e}")
       continue
+    # ask for confirmation only if more than 20 pages
+    if num_pages > 20:
+      print("Signing file: " + f)
+      confirm = input("Do you want to sign this file? (y/n): ")
+      if confirm.lower() != 'y':
+        print("Skipping file: " + f)
+        continue
 
     os.system('python pysigner.py -pdf "' + f + '"')
     print(f)

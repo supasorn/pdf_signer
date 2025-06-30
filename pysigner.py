@@ -22,10 +22,15 @@ dwidth = 800
 signature_width = 0.16
 # signature_width = 0.1
 
+preview_sizes = []
+
 def signPdf():
   print(pos)
   input_file = PdfReader(open(args.pdf, "rb"))
-  _, _, w, h = input_file.pages[0].mediabox
+  # for i in range(len(input_file.pages)):
+    # print("Page %d:" % i)
+    # print(input_file.pages[i].mediabox)
+  # exit()
 
   signature_img = "signature.png"
   sig = Image.open(signature_img)
@@ -34,15 +39,20 @@ def signPdf():
   pages = len(input_file.pages)
   for i in range(pages):
     input_page = input_file.pages[i]
+    _, _, w, h = input_file.pages[i].mediabox
 
     if pos[i][0] != -1:
       c = canvas.Canvas('watermark.pdf')
       c.setPageSize((w, h))
       sw = float(w) * signature_width
-      x = pos[i][0] / dwidth
-      y = 1 - (pos[i][1] + sig_small.shape[0]) / sm.shape[0]
-      print(x, y)
-      c.drawImage("signature.png", x * float(w), y * float(h), sw, sw * sig.size[1] / sig.size[0], mask='auto')
+
+      preview_h, preview_w = preview_sizes[i]
+      x_frac = pos[i][0] / preview_w
+      y_frac = (pos[i][1] + sig_small.shape[0]) / preview_h
+      x = x_frac * float(w)
+      y = float(h) - y_frac * float(h)
+
+      c.drawImage("signature.png", x, y, sw, sw * sig.size[1] / sig.size[0], mask='auto')
       c.save()
 
       watermark = PdfReader(open("watermark.pdf", "rb"))
@@ -111,6 +121,8 @@ def setNewPage():
   global pagei, sm
   img = cv2.imread(getNumberedName(args.pdf, pagei))
   sm = cv2.resize(img, (dwidth, int(dwidth * img.shape[0] / img.shape[1])))
+  if len(preview_sizes) <= pagei:
+    preview_sizes.append(sm.shape[:2])  # (height, width)
   showImg(sm)
 
 def sign():
